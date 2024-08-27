@@ -43,10 +43,7 @@ fn runArgs(args: []const []const u8, arena: mem.Allocator) errors.Error!void {
     } else if (mem.eql(u8, args[1], "migrate")) {
         try migrate.runMigrate(args, arena);
     } else if (mem.eql(u8, args[1], "create")) {
-        if (args.len == 9) {
-            const options = try utils.parseMigrationOptions(args, arena);
-            try create.CreateMigration(args[2], options.MigrationDir, arena);
-        }
+        try create.RunCreate(args, arena);
     }
 }
 

@@ -1,6 +1,7 @@
 const std = @import("std");
 const errors = @import("./errors.zig");
 const fs = std.fs;
+const utils = @import("./utils.zig");
 
 const MigrationDirection = enum {
     Up,
@@ -13,6 +14,24 @@ const MigrationFile = struct {
     Direction: MigrationDirection,
     FileName: []const u8,
 };
+
+const createMigrationInstructions =
+    \\Usage: wdb create [migration_name]
+    \\
+    \\Options:
+    \\  -dir [path] REQUIRED  path to database migrations directory
+    \\  -cs [connection string] REQUIRED database connection string
+    \\  -dbe [database engine]  REQUIRED Database engine, currently supports: SQLite
+;
+
+pub fn RunCreate(args: []const []const u8, arena: std.mem.Allocator) errors.Error!void {
+    if (args.len == 9) {
+        const options = try utils.parseMigrationOptions(args, arena);
+        try CreateMigration(args[2], options.MigrationDir, arena);
+    } else {
+        try std.io.getStdOut().writeAll(createMigrationInstructions);
+    }
+}
 
 fn ParseFileName(name: []const u8) errors.InvalidMigrationFileName!MigrationFile {
     var numberEnd: usize = 0;
@@ -53,7 +72,7 @@ fn ParseFileName(name: []const u8) errors.InvalidMigrationFileName!MigrationFile
     };
 }
 
-pub fn CreateMigration(name: []const u8, migrationDirPath: []const u8, arena: std.mem.Allocator) errors.Error!void {
+fn CreateMigration(name: []const u8, migrationDirPath: []const u8, arena: std.mem.Allocator) errors.Error!void {
     const cwd = fs.cwd();
 
     const migrationDir = try cwd.openDir(migrationDirPath, .{ .iterate = true });
